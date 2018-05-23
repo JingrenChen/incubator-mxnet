@@ -33,7 +33,7 @@ bool QuantizedConvShape(const nnvm::NodeAttrs& attrs,
                         std::vector<TShape>* out_shape) {
   using namespace mshadow;
   const ConvolutionParam& param = nnvm::get<ConvolutionParam>(attrs.parsed);
-  CHECK_EQ(param.num_group, 1U) << "quantized_conv only supports num_group=1 for now";
+  //CHECK_EQ(param.num_group, 1U) << "quantized_conv only supports num_group=1 for now";
   CHECK_EQ(in_shape->size(), param.no_bias? 6U : 9U);
   CHECK_EQ(out_shape->size(), 3U);
   if (param.layout.has_value()) {
@@ -51,6 +51,10 @@ bool QuantizedConvShape(const nnvm::NodeAttrs& attrs,
     << "for 8bit cudnn conv, the number of channel must be multiple of 4";
   CHECK_EQ(param.num_filter % 4, 0U)
     << "for 8bit cudnn conv, the number of channel must be multiple of 4";
+  CHECK_EQ(dshape[C] % param.num_group, 0U)
+    << "input num_filter must divide group size";
+  CHECK_EQ(param.num_filter % param.num_group, 0U)
+    << "output num_filter must divide group size";
 
   TShape wshape{0, 0, 0, 0};
   wshape[N] = param.num_filter;

@@ -226,9 +226,18 @@ class QuantizedCuDNNConvOp {
                                           src_type_,
                                           format_,
                                           kshape[N],
+                                        #if CUDNN_MAJOR >= 7
+                                          kshape[C]/param_.num_group,
+                                        #else
                                           kshape[C],
+                                        #endif
                                           kshape[H],
                                           kshape[W]));
+
+    // add support for depthwise conv (grouped conv)
+  #if CUDNN_MAJOR >= 7
+    CUDNN_CALL(cudnnSetConvolutionGroupCount(conv_desc_, param_.num_group));
+  #endif
   }
 
   void GetTempSize(const OpContext& ctx) {
